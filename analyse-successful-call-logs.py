@@ -1,6 +1,7 @@
 import re
 import pandas as pd
 import datetime
+import plotly.express as px
 
 
 def normalise_duration_to_hours(duration_text):
@@ -71,3 +72,39 @@ if __name__ == "__main__":
 
     # Write to a new CSV file
     df.to_csv("./output/analysed-successful-call-logs.csv", index=False)
+
+    # Plot a scatter graph
+    fig = px.scatter(
+        df,
+        x="Date Time",
+        y="Duration (hours)",
+        color="Name",
+        hover_data=["ID"],
+        title="Duration of successful calls through time",
+    )
+    fig.update_xaxes(title_text="Date Time")
+    fig.update_yaxes(title_text="Duration (hours)")
+
+    # Customise dots
+    fig.update_traces(marker_size=7)
+
+    # Date Time slicing
+    fig.update_layout(
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=list(
+                    [
+                        dict(count=7, label="1w", step="day", stepmode="backward"),
+                        dict(count=1, label="1m", step="month", stepmode="backward"),
+                        dict(count=6, label="6m", step="month", stepmode="backward"),
+                        dict(count=1, label="1y", step="year", stepmode="backward"),
+                        dict(step="all"),
+                    ]
+                )
+            )
+        ),
+        xaxis_rangeslider_visible=True,
+    )
+
+    # Save to file
+    fig.write_html("./output/duration-of-successful-calls-through-time.html")
