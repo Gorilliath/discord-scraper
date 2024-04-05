@@ -63,11 +63,67 @@ def parse_raw_text(raw_text):
     return pd.Series([caller, duration, date_time])
 
 
+def plot_scatter(df):
+    fig = px.scatter(
+        df,
+        x="Date Time",
+        y="Duration (hours)",
+        color="Caller",
+        hover_data=["ID"],
+        title="Duration of successful calls",
+    )
+    fig.update_xaxes(title_text="Date Time")
+    fig.update_yaxes(title_text="Duration (hours)")
+
+    fig.update_traces(marker_size=7)
+
+    # Date Time slicing
+    fig.update_layout(
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=list(
+                    [
+                        dict(count=7, label="1w", step="day", stepmode="backward"),
+                        dict(count=1, label="1m", step="month", stepmode="backward"),
+                        dict(count=6, label="6m", step="month", stepmode="backward"),
+                        dict(count=1, label="1y", step="year", stepmode="backward"),
+                        dict(step="all"),
+                    ]
+                )
+            )
+        ),
+        xaxis_rangeslider_visible=True,
+    )
+
+    fig.write_html(f"./output/scatter-duration-of-successful-calls.html")
+
+
+def plot_histogram(df):
+    df["Year"] = pd.to_datetime(df["Date Time"]).dt.year
+
+    fig = px.histogram(
+        df,
+        x="Date Time",
+        y="Duration (hours)",
+        color="Year",
+        title="Total duration of successful calls each month",
+    )
+    fig.update_xaxes(title_text="Month")
+    fig.update_yaxes(title_text="Duration (hours)")
+
+    # Histogram bins should be for each month
+    fig.update_traces(xbins_size="M1")
+
+    fig.write_html(
+        f"./output/histogram-total-duration-of-successful-calls-each-month.html"
+    )
+
+
 if __name__ == "__main__":
     # Load the raw data
     df = pd.read_csv("./output/successful-call-logs.csv")
 
-    # Parse 'Raw Text' to it's constituent parts and extend the dataframe with it
+    # Parse 'Raw Text' to its constituent parts and extend the dataframe with it
     df[["Caller", "Duration (hours)", "Date Time"]] = df["Raw Text"].apply(
         parse_raw_text
     )
@@ -75,47 +131,5 @@ if __name__ == "__main__":
     # Write to a new CSV file
     df.to_csv("./output/analysed-successful-call-logs.csv", index=False)
 
-    # Plot graphs
-    plot_name_method_map = {"scatter": px.scatter, "histogram": px.histogram}
-    for plot_name, plot_method in plot_name_method_map.items():
-        fig = plot_method(
-            df,
-            x="Date Time",
-            y="Duration (hours)",
-            color="Caller",
-            hover_data=["ID"],
-            title="Duration of successful calls through time",
-        )
-        fig.update_xaxes(title_text="Date Time")
-        fig.update_yaxes(title_text="Duration (hours)")
-
-        # Customise scatter plot dot size
-        if plot_name == "scatter":
-            fig.update_traces(marker_size=7)
-
-        # Date Time slicing
-        fig.update_layout(
-            xaxis=dict(
-                rangeselector=dict(
-                    buttons=list(
-                        [
-                            dict(count=7, label="1w", step="day", stepmode="backward"),
-                            dict(
-                                count=1, label="1m", step="month", stepmode="backward"
-                            ),
-                            dict(
-                                count=6, label="6m", step="month", stepmode="backward"
-                            ),
-                            dict(count=1, label="1y", step="year", stepmode="backward"),
-                            dict(step="all"),
-                        ]
-                    )
-                )
-            ),
-            xaxis_rangeslider_visible=True,
-        )
-
-        # Save to file
-        fig.write_html(
-            f"./output/duration-of-successful-calls-through-time-{plot_name}.html"
-        )
+    plot_scatter(df)
+    plot_histogram(df)
