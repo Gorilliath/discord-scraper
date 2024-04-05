@@ -3,16 +3,17 @@ import time
 from playwright.sync_api import sync_playwright
 
 
+output_path = "./output/successful-call-logs"
+raw_output_file_path = os.path.join(output_path, "raw.csv")
+
+
 if __name__ == "__main__":
     try:
         # Reporting setup
-        output_path = "./output"
         if not os.path.exists(output_path):
             os.makedirs(output_path)
 
-        output_file = os.path.join(output_path, "successful-call-logs.csv")
-        output_file_writer = open(output_file, "a")
-
+        output_file_writer = open(raw_output_file_path, "a")
         output_file_writer.write("ID,Raw Text\n")
 
         # Playwright setup

@@ -1,7 +1,12 @@
+import os
 import re
 import pandas as pd
 import datetime
 import plotly.express as px
+from scrape_successful_call_logs import output_path, raw_output_file_path
+
+
+analysed_file_path = os.path.join(output_path, "analysed.csv")
 
 
 def normalise_duration_to_hours(duration_text):
@@ -63,7 +68,7 @@ def parse_raw_text(raw_text):
     return pd.Series([caller, duration, date_time])
 
 
-def plot_scatter(df):
+def plot_scatter(df, file_name):
     fig = px.scatter(
         df,
         x="Date Time",
@@ -95,10 +100,10 @@ def plot_scatter(df):
         xaxis_rangeslider_visible=True,
     )
 
-    fig.write_html(f"./output/scatter-duration-of-successful-calls.html")
+    fig.write_html(os.path.join(output_path, f"{file_name}.html"))
 
 
-def plot_histogram(df):
+def plot_histogram(df, file_name):
     df["Year"] = pd.to_datetime(df["Date Time"]).dt.year
 
     fig = px.histogram(
@@ -114,14 +119,12 @@ def plot_histogram(df):
     # Histogram bins should be for each month
     fig.update_traces(xbins_size="M1")
 
-    fig.write_html(
-        f"./output/histogram-total-duration-of-successful-calls-each-month.html"
-    )
+    fig.write_html(os.path.join(output_path, f"{file_name}.html"))
 
 
 if __name__ == "__main__":
     # Load the raw data
-    df = pd.read_csv("./output/successful-call-logs.csv")
+    df = pd.read_csv(raw_output_file_path)
 
     # Parse 'Raw Text' to its constituent parts and extend the dataframe with it
     df[["Caller", "Duration (hours)", "Date Time"]] = df["Raw Text"].apply(
@@ -129,7 +132,7 @@ if __name__ == "__main__":
     )
 
     # Write to a new CSV file
-    df.to_csv("./output/analysed-successful-call-logs.csv", index=False)
+    df.to_csv(analysed_file_path, index=False)
 
-    plot_scatter(df)
-    plot_histogram(df)
+    plot_scatter(df, "scatter-duration-of-successful-calls")
+    plot_histogram(df, "histogram-total-duration-of-successful-calls-each-month")
